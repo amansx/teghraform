@@ -1,0 +1,8 @@
+package: gform
+import:
+- package: github.com/muhqu/go-gherkin
+  version: ~0.1.7
+- package: github.com/aws/aws-sdk-go
+  version: ~1.16.14
+- package: github.com/Knetic/govaluate
+  version: master
