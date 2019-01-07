@@ -8,8 +8,10 @@ Feature: Create S3 Buckets if not exist
 		| mybucket  | true   |
 		| mybucket1 | false  |
 
-		When aws s3 bucket doesn't exist "bucket1"
+		When aws s3 bucket doesn't exist
+		| mybucket |
 		
 		And mybucket.Update IS true
 		
-		Then create aws s3 bucket "bucket1"
+		Then create aws s3 bucket
+		| mybucket |
