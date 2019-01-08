@@ -4,5 +4,5 @@ package aws
 
 type S3 struct{}
 
-func (this *S3) BucketDoesntExistMeta() string            { return "aws s3 bucket doesn't exist" }
-func (this *S3) BucketDoesntExist(bucketName string) bool { return false }
+// func (this *S3) BucketDoesntExistMeta() string            { return "aws s3 bucket doesn't exist" }
+// func (this *S3) BucketDoesntExist(bucketName string) bool { return false }

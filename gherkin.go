@@ -17,7 +17,8 @@ func EvaluateExpression(expression string, parameters map[string]interface{}) (i
 	return nil, err
 }
 
-func ParseGiven(step nodes.StepNode) {
+func ParseGiven(step nodes.StepNode) map[string]interface{} {
+	var objects map[string]interface{} = make(map[string]interface{})
 	var indexMap map[string]int = make(map[string]int)
 
 	if table := step.Table(); table != nil {
@@ -30,14 +31,26 @@ func ParseGiven(step nodes.StepNode) {
 			}
 			for r := 1; r < rowLen; r++ {
 				row := rows[r]
-				instance := GetInstanceFor(instanceType, indexMap, row)
-				fmt.Println(instance)
+				name, instance := GetInstanceFor(instanceType, indexMap, row)
+				objects[name] = instance
 			}
 		}
 	}
+
+	return objects
 }
 
-func ParseStep(step nodes.StepNode) {
+func ParseStep(step nodes.StepNode, params map[string]interface{}) (interface{}, error) {
+	stepText := step.Text()
+	method := index[stepText]
+
+	if method != nil {
+		return method(), nil
+	} else {
+		result, err := EvaluateExpression(stepText, params)
+		fmt.Println(stepText, "-->", result)
+		return result, err
+	}
 }
 
 func LoadFeature(featureDef string) {
@@ -50,14 +63,17 @@ func LoadFeature(featureDef string) {
 
 	params := make(map[string]interface{})
 	for _, scenario := range feature.Scenarios() {
+	stepIteration:
 		for _, step := range scenario.Steps() {
 			switch step.StepType() {
 			case "Given":
-				ParseGiven(step)
-			case "Then":
-				ParseStep(step)
-			default:
-				EvaluateExpression(step.Text(), params)
+				params = ParseGiven(step)
+			case "Then", "When", "And", "Or", "But":
+				_, err := ParseStep(step, params)
+				if err != nil {
+					fmt.Println("Step broke rolling back..", err)
+					break stepIteration
+				}
 			}
 		}
 	}

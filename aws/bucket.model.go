@@ -1,5 +1,6 @@
 package aws
 
 type Bucket struct {
-	Name string
+	Name   string
+	Update string
 }

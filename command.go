@@ -1,68 +1,39 @@
 package main
 
-import "fmt"
 import "reflect"
 import "teghraform/aws"
 
-func GetInstanceFor(instancetype string, indexMap map[string]int, row []string) interface{} {
-
-	var params []string
+func GetInstanceFor(instancetype string, indexMap map[string]int, row []string) (string, interface{}) {
 	var instance interface{}
-	instance = aws.Bucket{}
+	var instanceName string
 
-	val := reflect.ValueOf(instance) // could be any underlying type
-
-	// if its a pointer, resolve its value
-	if val.Kind() == reflect.Ptr {
-		val = reflect.Indirect(val)
+	switch instancetype {
+	case "aws.s3.bucket":
+		instance = &aws.Bucket{}
 	}
 
-	// now we grab our values as before (note: I assume table name should come from the struct type)
-	structType := val.Type()
-	tableName := structType.Name()
-	params = append(params, tableName)
+	if instance != nil {
 
-	for i := 0; i < structType.NumField(); i++ {
-		field := structType.Field(i)
+		strct := reflect.ValueOf(instance)
+		if strct.Kind() == reflect.Ptr {
+			strct = reflect.Indirect(strct)
+		}
 
-		fmt.Println(field)
-		// tag := field.Tag
+		strctType := strct.Type()
+		strcv := reflect.ValueOf(instance).Elem()
 
-		// fieldName := field.Name
-		// fieldType := tag.Get("sql_type")
-		// fieldTags := tag.Get("sql_tag")
+		for i := 0; i < strct.NumField(); i++ {
+			fieldName := strctType.Field(i).Name
+			if vindex := indexMap[fieldName]; vindex > 0 {
+				value := row[vindex-1]
+				if fieldName == "Name" {
+					instanceName = value
+				}
+				strcv.FieldByName(fieldName).SetString(value)
+			}
+		}
 
-		// paramstring := fieldName + " " + fieldType + " " + fieldTags
-		// params = append(params, paramstring)
 	}
 
-	// switch instancetype {
-	// case "aws.s3.bucket":
-	// 	instance = aws.Bucket{}
-	// }
-
-	// fields := reflect.ValueOf(&instance)
-	// //.Elem()
-	// fieldTypes := fields.Type()
-
-	// for f := 0; f < fields.NumField(); f++ {
-
-	// 	// field := fields.Field(f).Interface()
-	// 	fieldName := fieldTypes.Field(f).Name
-
-	// 	if indexMap[fieldName] > 0 {
-	// 		if f := fields.FieldByName(fieldName); f.IsValid() && f.CanSet() {
-	// 			f.SetString("Aman")
-	// 		}
-	// 	}
-	// }
-
-	// for _, item := range row {
-	// 	fmt.Println(item)
-	// }
-
-	// return instance
-
-	return nil
-
+	return instanceName, instance
 }
