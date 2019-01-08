@@ -1,4 +1,4 @@
-package: gform
+package: teghraform
 import:
 - package: github.com/muhqu/go-gherkin
   version: ~0.1.7

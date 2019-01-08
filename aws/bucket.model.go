@@ -1,3 +1,5 @@
 package aws
 
-type Bucket
+type Bucket struct {
+	Name string
+}
