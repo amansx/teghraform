@@ -1,13 +1,23 @@
 package main
 
+import "strings"
 import "reflect"
 import "teghraform/aws"
 
-func GetInstanceFor(instancetype string, indexMap map[string]int, row []string) (string, interface{}) {
+func GetInstanceFor(indexMap map[string]int, row []string) (string, interface{}) {
 	var instance interface{}
+	var instanceType string
 	var instanceName string
 
-	switch instancetype {
+	instancetypeIndex := indexMap[OBJECT_TYPE]
+	if instancetypeIndex > 0 {
+		instanceType = row[instancetypeIndex - 1]
+		instanceType = strings.TrimSpace(strings.ToLower(instanceType))
+	}else{
+		return instanceName, instance
+	}
+
+	switch instanceType {
 	case "aws.s3.bucket":
 		instance = &aws.Bucket{}
 	}
@@ -26,7 +36,7 @@ func GetInstanceFor(instancetype string, indexMap map[string]int, row []string) 
 			fieldName := strctType.Field(i).Name
 			if vindex := indexMap[fieldName]; vindex > 0 {
 				value := row[vindex-1]
-				if fieldName == "Name" {
+				if fieldName == OBJECT_NAME {
 					instanceName = value
 				}
 				strcv.FieldByName(fieldName).SetString(value)

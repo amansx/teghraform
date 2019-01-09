@@ -6,3 +6,5 @@ import:
   version: ~1.16.14
 - package: github.com/Knetic/govaluate
   version: master
+- package: github.com/xlab/treeprint
+- package: github.com/logrusorgru/aurora
