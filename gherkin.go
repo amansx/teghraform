@@ -18,8 +18,9 @@ func EvaluateExpression(expression string, parameters map[string]interface{}) (i
 	return nil, err
 }
 
-func ParseGiven(step nodes.StepNode, params map[string]interface{}) map[string]interface{} {
+func ParseGiven(step nodes.StepNode, params map[string]interface{}, example interface{}) map[string]interface{} {
 	var indexMap map[string]int = make(map[string]int)
+	params["example"] = example
 
 	if table := step.Table(); table != nil {
 		rows := table.Rows()
@@ -64,25 +65,65 @@ func LoadFeature(featureDef string) {
 
 	tree := treeprint.New()
 	params := make(map[string]interface{})
+
+scenarioLoop:
 	for _, scenario := range feature.Scenarios() {
+
+		scenarioTags := scenario.Tags()
+		for _, tag := range scenarioTags {
+			tagProps := strings.Split(tag, "::")
+			for _, prop := range tagProps {
+				if prop == "Rollback" {
+					continue scenarioLoop
+				}
+			}
+		}
+
+		var name string
+		var example interface{}
+		var examples nodes.OutlineExamplesNode
+		var indexMap map[string]int = make(map[string]int)
+
+		exampleIndex, exampleCount := 1, 0
+
+		if outline, ok := scenario.(nodes.OutlineNode); ok {
+			examples = outline.Examples()
+			exampleCount = len(examples.Table().Rows()) - 1
+		}
+
+		if exampleCount > 0 {
+			rows := examples.Table().Rows()
+			for i, rowIndexes := range rows[0] {
+				indexMap[rowIndexes] = i + 1
+			}
+		}
+
+	runOutline:
+		var featureBranch treeprint.Tree
 		ftitle, stitle := feature.Title(), scenario.Title()
-		featureBranch := tree.AddBranch(fmt.Sprintf("Feature: %s", ftitle))
+		if exampleCount > 0 {
+			exampleData := examples.Table().Rows()[exampleIndex]
+			name, example = GetInstanceFor(indexMap, exampleData)
+			featureBranch = tree.AddBranch(fmt.Sprintf("Feature <%s>: %s", name, ftitle))
+		} else {
+			featureBranch = tree.AddBranch(fmt.Sprintf("Feature: %s", ftitle))
+		}
 		scenarioBranch := featureBranch.AddBranch(fmt.Sprintf("Scenario: %s", stitle))
 
 	stepIteration:
 		for _, step := range scenario.Steps() {
 			switch step.StepType() {
 			case "Given":
-				params = ParseGiven(step, params)
+				params = ParseGiven(step, params, example)
 			case "Then", "When", "And", "Or", "But":
 				r, err := ParseStep(step, params)
 				scenarioBranch.AddNode(fmt.Sprintf("Step: %s", step.Text()))
-				
+
 				if err != nil {
 					scenarioBranch.AddNode(fmt.Sprintf("Fail: %v", err))
 					break stepIteration
 				}
-				
+
 				switch result := r.(type) {
 				case bool:
 					if !result {
@@ -92,7 +133,13 @@ func LoadFeature(featureDef string) {
 				}
 			}
 		}
+
+		if exampleIndex < exampleCount {
+			exampleIndex += 1
+			goto runOutline
+		}
+
 	}
 
-	fmt.Println(tree.String())	
+	fmt.Println(tree.String())
 }

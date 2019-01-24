@@ -11,9 +11,9 @@ func GetInstanceFor(indexMap map[string]int, row []string) (string, interface{})
 
 	instancetypeIndex := indexMap[OBJECT_TYPE]
 	if instancetypeIndex > 0 {
-		instanceType = row[instancetypeIndex - 1]
+		instanceType = row[instancetypeIndex-1]
 		instanceType = strings.TrimSpace(strings.ToLower(instanceType))
-	}else{
+	} else {
 		return instanceName, instance
 	}
 

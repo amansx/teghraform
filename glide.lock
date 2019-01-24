@@ -1,8 +1,8 @@
 hash: dc9bc98bb923adee2c2c716deb0a1d9592585cdcf66ce2cab52d57165c1206fa
-updated: 2019-01-09T09:44:06.424278491-08:00
+updated: 2019-01-09T15:29:28.898403-08:00
 imports:
 - name: github.com/aws/aws-sdk-go
-  version: 62936e15518acb527a1a9cb4a39d96d94d0fd9a2
+  version: 1f8a24693bc965514ee0d7aadbabe0ceed184a88
 - name: github.com/Knetic/govaluate
   version: 9aa49832a739dcd78a5542ff189fb82c3e423116
 - name: github.com/logrusorgru/aurora
